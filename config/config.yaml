@@ -1,0 +1,63 @@
+# change this to env variables later
+openai_api_key: TO BE FILLED OUT
+pushbullet_api_key: TO BE FILLED OUT
+
+required_libraries:
+    - "schedule"
+    - "pandas"
+    - "openai"
+    - "requests"
+    - "pushbullet.py"  # pip package name for Pushbullet is "pushbullet.py"
+    - "numpy"
+    - "sqlalchemy"
+    - "yaml"
+
+database_path: "data/data.db"
+
+scheduling: # in minutes
+  scrape_intervall: 5
+  database_availability_check: 120
+
+
+
+search:
+    items:
+ #   - name: gpu
+ #     search_terms_sepcific_num: 30
+ #     search_terms_general_num: 30
+   #   search_terms_specific_prompt: "as the search term is gpu, start by listing all the gpus that have been released in the past 4 as of 2024 years. also generate variations of the name of each gpu (for example 'nvidia rtx 3090' also include searches like 'nvidia 3090' and 'rtx 3090')"
+    #  search_terms_general_prompt: "the search terms should be general. avoid using product names or specific items. dont do 'nvidia gtx 1660' but rather do for example 'gaming gpu'. make sure to have a 50/50 on german and english search terms"
+#
+ #     threshold:
+  #      minimum_value_factor: 200
+   #     minimum_price: 100
+    #    minimum_profit: 50
+#
+ #     filter:
+  #      filter_1: "asses, if the item offered is or contains gpu in a strict sense. return 1 if yes and 0 if no."
+   #     filter_2: "is the item a pc building component or a total pc? return 1 if yes and 0 if no."
+    #    filter_3: "is the item a pc tower component or a tower pc/gaming pc? return 1 if yes and 0 if no."
+
+    - name: rtx 4060
+      search_terms_sepcific_num: 100
+      search_terms_general_num: 100
+      search_terms_specific_prompt: "im looking for a gpu that is at least as powerful as the rtx 4060. generate search terms of graphics cards that are as or even better than the rtx 4060. modulate the graphics card names so the search is as wide as possible"
+      search_terms_general_prompt: "the search terms should be general. avoid using product names or specific items. dont do 'nvidia gtx 1660' but rather do for example 'gaming gpu'. make sure to have a 50/50 on german and english search terms"
+
+      threshold:
+        minimum_value_factor: 150
+        minimum_price: 150
+        minimum_profit: 50
+        maximum_price: 300
+
+      filter:
+        filter_1: "asses, if the item offered is or contains gpu that is a rtx 4060 or a graphics card that is better like a rtx 4070 or rtx 3080. return 1 if yes and 0 if no."
+        filter_2: "asses, if the listing sells a laptop. return 0 if it does and 1 if it does not"
+        filter_3: "return 1"
+
+
+
+
+
+
+
