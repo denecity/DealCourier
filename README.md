@@ -3,7 +3,9 @@ dtitov@ethz.ch
 
 This is a program that automatically scrapes the plattform tutti.ch (for now) for your items of, saves the best deals and sends notifications right to your phone so you can be the first one to react. It heavily uses openai api for classification and evaluation of listings. It is built to be run on small servers like a raspberry pi.
 
-Step-by-step guide:
+This is a reupload of a private repo.
+
+Setup guide:
 1. Get an openai-api key and enable all chatgpt 4o, 4o-mini and embedding tools for your project.
 2. Get a pushbullet account and api key to receive notifications.
 3. Paste both of them into the config.
