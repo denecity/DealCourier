@@ -1,0 +1,88 @@
+# ──────────────────────────────────────────────────────────────────────────
+# DealCourier configuration template
+# ──────────────────────────────────────────────────────────────────────────
+# 1. Copy this file to `config.yaml`   (Windows:  copy config_init.yaml config.yaml)
+#                                          (macOS/Linux: cp config_init.yaml config.yaml)
+# 2. Fill in your `api_key` (and optionally a Discord webhook URL).
+# 3. Adjust `base_url` / model ids to match your AI provider if you don't use
+#    the OpenRouter defaults below.
+#
+# Secrets can also be supplied through environment variables, which take
+# precedence over the values in this file:
+#     API_KEY              -> api_key
+#     BASE_URL             -> base_url
+#     DISCORD_WEBHOOK_URL  -> discord_webhook_url
+#     DEALCOURIER_HOST / DEALCOURIER_PORT / DEALCOURIER_DB
+# A `.env` file (gitignored) is loaded automatically by python-dotenv.
+#
+# `config.yaml` is gitignored, so your keys never end up in git.
+# ──────────────────────────────────────────────────────────────────────────
+
+# ─── AI backend (OpenAI-compatible) ──────────────────────────────────────
+# DealCourier works with ANY provider that speaks the OpenAI Chat Completions
+# API. Just point base_url at the provider and set api_key.
+#
+#   OpenAI:      https://api.openai.com/v1
+#   OpenRouter:  https://openrouter.ai/api/v1   (model ids like "z-ai/glm-5.2")
+#   DeepSeek:    https://api.deepseek.com/v1
+#   Groq:        https://api.groq.com/openai/v1
+#   Together:    https://api.together.xyz/v1
+#   local Ollama OpenAI shim: http://localhost:11434/v1
+api_key: ""                       # <-- put your API key here
+base_url: "https://openrouter.ai/api/v1"
+
+# Model ids understood by your provider. `default_model` is used for the
+# high-volume listing-evaluation pass; `terms_model` is used for the
+# low-frequency search-term generation (leave empty to reuse default_model).
+default_model: "deepseek-v4-flash"
+terms_model: "z-ai/glm-5.2"
+
+ai_max_tokens: 4096
+ai_request_timeout_seconds: 60
+
+discord_webhook_url: ""           # optional, see Notifications section below
+
+# ─── Server ──────────────────────────────────────────────
+host: "127.0.0.1"                 # use "0.0.0.0" to expose on your LAN
+port: 8000
+database_path: "data/dealcourier.db"
+log_file: "logs/dealcourier.log"
+log_level: "INFO"                 # DEBUG, INFO, WARNING, ERROR
+
+# ─── Scheduler ──────────────────────────────────────────────
+scrape_interval_minutes: 60        # how often to run a scrape cycle
+term_regeneration_interval_hours: 24  # how often to regenerate search terms
+run_scrape_on_start: false         # run a scrape immediately on startup
+
+# ─── Scraper: Global ──────────────────────────────────────
+request_timeout_seconds: 30        # HTTP timeout for all scrapers
+request_delay_seconds: 1           # fallback delay (overridden per-shop below)
+
+# ─── Scraper: Tutti ──────────────────────────────────────
+tutti_delay_seconds: 2.0           # seconds between requests
+tutti_max_terms: 0                 # max search terms to use (0 = no limit)
+tutti_results_per_page: 30         # listings per search page
+
+# ─── Scraper: Ricardo ──────────────────────────────────────
+ricardo_delay_seconds: 30.0       # seconds between requests (aggressive rate limiting)
+ricardo_max_terms: 0               # max search terms to use (0 = no limit)
+ricardo_auction_max_hours: 48.0    # include auctions ending within this many hours
+ricardo_include_auctions: true     # set false to skip ALL auctions entirely
+ricardo_include_buy_now: true      # include buy-now listings
+
+# ─── Scraper: Anibis ──────────────────────────────────────
+anibis_delay_seconds: 2.0          # seconds between requests
+anibis_max_terms: 0                # max search terms to use (0 = no limit)
+
+# ─── Notifications ──────────────────────────────────────
+# DealCourier notifies via a Discord webhook. Create one in Discord:
+#   channel settings -> Integrations -> Webhooks -> New Webhook -> Copy URL.
+discord_enabled: false             # master switch for Discord notifications
+discord_min_value_factor: 0.0      # only notify if value_factor >= this (0 = no filter)
+discord_min_profit: 0             # only notify if profit >= this CHF (0 = no filter)
+discord_max_distance_km: 0.0       # only notify if distance <= this km (0 = no filter)
+
+# ─── Filters ──────────────────────────────────────
+global_min_price: 0               # skip listings below this price (0 = no filter)
+global_max_price: 0               # skip listings above this price (0 = no filter)
+skip_free_listings: true          # skip listings with price = 0

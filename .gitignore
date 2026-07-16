@@ -1,0 +1,26 @@
+# Secrets
+.env
+config.yaml
+.claude
+
+# Data
+data/
+logs/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (legacy frontend)
+node_modules/
+.next/

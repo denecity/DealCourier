@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DealCourier</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%236366f1'/%3E%3Cpath d='M12 4l7 3.5v6L12 17l-7-3.5v-6L12 4z' fill='none' stroke='%23fff' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M12 4v13M5 7.5l7 3.5 7-3.5' fill='none' stroke='%23fff' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --bg-card: #1a1d27;
+            --bg-hover: #232733;
+            --border: #2a2e3a;
+            --text: #e4e4e7;
+            --text-dim: #8b8d97;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --green: #22c55e;
+            --yellow: #eab308;
+            --red: #ef4444;
+            --blue: #3b82f6;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            height: 56px;
+            gap: 32px;
+        }
+        header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .tabs {
+            display: flex;
+            gap: 4px;
+            height: 100%;
+        }
+        .tab {
+            padding: 0 16px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: var(--text-dim);
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            font-family: inherit;
+        }
+        .tab:hover { color: var(--text); }
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+        .stats-bar {
+            margin-left: auto;
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+        .stats-bar span { font-weight: 600; color: var(--text); }
+        main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* Cards & Tables */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .card:hover { border-color: var(--accent); }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .card-title a { color: var(--text); text-decoration: none; }
+        .card-title a:hover { color: var(--accent); }
+        .badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+        .badge-yellow { background: rgba(234,179,8,0.15); color: var(--yellow); }
+        .badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+        .badge-blue { background: rgba(59,130,246,0.15); color: var(--blue); }
+        .badge-dim { background: rgba(139,141,151,0.15); color: var(--text-dim); }
+
+        /* Listing cards: thumbnail fills height, body on the right */
+        .listing-card {
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: stretch;
+        }
+        .listing-thumb {
+            width: 160px;
+            height: 160px;
+            flex-shrink: 0;
+            align-self: flex-start;
+            background: var(--bg-hover);
+            display: block;
+            overflow: hidden;
+        }
+        .listing-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .listing-body {
+            flex: 1;
+            min-width: 0;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .listing-body .card-header { margin-bottom: 0; }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+        .meta strong { color: var(--text); }
+        .meta-row { display: flex; gap: 6px; align-items: center; }
+
+        /* Structured number grid for listings */
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px 18px;
+            font-size: 13px;
+        }
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        .meta-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: var(--text-dim);
+        }
+        .meta-value {
+            color: var(--text);
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .meta-value.dim { color: var(--text-dim); font-weight: 500; }
+
+        .card-detail {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text-dim);
+            display: none;
+        }
+        .card.expanded .card-detail { display: block; }
+
+        /* Filters */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .filter-bar select, .filter-bar input {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        .filter-bar select:focus, .filter-bar input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-danger { border-color: var(--red); color: var(--red); }
+        .btn-danger:hover { background: rgba(239,68,68,0.1); }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+        /* Forms */
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .form-row { display: flex; gap: 12px; }
+        .form-row > .form-group { flex: 1; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal h2 { font-size: 18px; margin-bottom: 16px; }
+
+        /* Log viewer */
+        .log-container {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            padding: 12px;
+            height: 600px;
+            overflow-y: auto;
+        }
+        .log-line { padding: 2px 0; white-space: pre-wrap; word-break: break-all; }
+        .log-line.INFO { color: var(--text); }
+        .log-line.WARNING { color: var(--yellow); }
+        .log-line.ERROR { color: var(--red); }
+        .log-line.DEBUG { color: var(--text-dim); }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        tr:hover td { background: var(--bg-hover); }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        .toggle {
+            width: 40px; height: 22px;
+            background: var(--border);
+            border-radius: 11px;
+            position: relative;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+        .toggle.on { background: var(--accent); }
+        .toggle::after {
+            content: '';
+            width: 18px; height: 18px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px; left: 2px;
+            transition: transform 0.2s;
+        }
+        .toggle.on::after { transform: translateX(18px); }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-dim);
+        }
+        .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>DealCourier</h1>
+        <div class="tabs">
+            <button class="tab active" data-panel="listings">Listings</button>
+            <button class="tab" data-panel="search-config">Search Config</button>
+            <button class="tab" data-panel="prompts">Prompts</button>
+            <button class="tab" data-panel="schedule">Schedule</button>
+            <button class="tab" data-panel="products">Products</button>
+            <button class="tab" data-panel="logs">Logs</button>
+        </div>
+        <div class="stats-bar" id="stats-bar"></div>
+    </header>
+
+    <main>
+        <!-- LISTINGS PANEL -->
+        <div class="panel active" id="panel-listings">
+            <div class="filter-bar">
+                <select id="filter-platform">
+                    <option value="">All Platforms</option>
+                    <option value="tutti">Tutti</option>
+                    <option value="ricardo">Ricardo</option>
+                    <option value="anibis">Anibis</option>
+                </select>
+                <select id="filter-passed">
+                    <option value="">All</option>
+                    <option value="true" selected>Passed</option>
+                    <option value="false">Filtered Out</option>
+                </select>
+                <input type="number" id="filter-min-price" placeholder="Min Price" style="width:100px">
+                <input type="number" id="filter-max-price" placeholder="Max Price" style="width:100px">
+                <select id="filter-sort">
+                    <option value="scraped_at">Date Scraped</option>
+                    <option value="price">Price</option>
+                    <option value="estimated_value">Est. Value</option>
+                    <option value="value_factor">Value Factor</option>
+                    <option value="confidence">Confidence</option>
+                    <option value="distance_km">Distance</option>
+                </select>
+                <select id="filter-order">
+                    <option value="desc">Desc</option>
+                    <option value="asc">Asc</option>
+                </select>
+                <button class="btn btn-primary" onclick="loadListings()">Filter</button>
+            </div>
+            <div id="listings-container"></div>
+            <div class="pagination" id="listings-pagination"></div>
+        </div>
+
+        <!-- SEARCH CONFIG PANEL -->
+        <div class="panel" id="panel-search-config">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <h2 style="font-size:18px">Search Items</h2>
+                <button class="btn btn-primary" onclick="showSearchItemModal()">+ New Search Item</button>
+            </div>
+            <div id="search-items-container"></div>
+        </div>
+
+        <!-- PROMPTS PANEL -->
+        <div class="panel" id="panel-prompts">
+            <h2 style="font-size:18px;margin-bottom:20px">Prompt Templates</h2>
+            <div id="prompts-container"></div>
+        </div>
+
+        <!-- SCHEDULE PANEL -->
+        <div class="panel" id="panel-schedule">
+            <div style="display:flex;gap:24px;margin-bottom:24px">
+                <div class="card" style="flex:1">
+                    <h3 style="font-size:15px;margin-bottom:12px">Scheduler Status</h3>
+                    <div id="scheduler-status"></div>
+                </div>
+                <div class="card" style="flex:1">
+                    <h3 style="font-size:15px;margin-bottom:12px">Actions</h3>
+                    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                        <button class="btn btn-primary" onclick="triggerScrape()">Run Scrape</button>
+                        <button class="btn btn-primary" id="eval-all-btn" onclick="evalAll()">Eval All Unevaluated</button>
+                        <button class="btn btn-danger" onclick="deleteAllListings()">Clear All Listings</button>
+                        <input type="number" id="interval-input" placeholder="60" style="width:80px;padding:8px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:13px">
+                        <button class="btn" onclick="updateInterval()">Set Interval (min)</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="margin-bottom:24px">
+                <h3 style="font-size:15px;margin-bottom:12px">Enabled Shops</h3>
+                <p style="font-size:13px;color:var(--text-dim);margin-bottom:12px">Globally enable or disable marketplace scrapers.</p>
+                <div id="shop-toggles" style="display:flex;gap:24px;align-items:center"></div>
+            </div>
+            <h3 style="font-size:15px;margin-bottom:12px">Scrape Runs</h3>
+            <div id="scrape-runs-container"></div>
+        </div>
+
+        <!-- PRODUCTS PANEL -->
+        <div class="panel" id="panel-products">
+            <h2 style="font-size:18px;margin-bottom:20px">Product Knowledge Base</h2>
+            <div id="products-container"></div>
+        </div>
+
+        <!-- LOGS PANEL -->
+        <div class="panel" id="panel-logs">
+            <div class="filter-bar">
+                <select id="log-level-filter">
+                    <option value="">All Levels</option>
+                    <option value="DEBUG">DEBUG</option>
+                    <option value="INFO">INFO</option>
+                    <option value="WARNING">WARNING</option>
+                    <option value="ERROR">ERROR</option>
+                </select>
+                <input type="text" id="log-search" placeholder="Search logs..." style="width:250px">
+                <button class="btn" onclick="loadLogs()">Search</button>
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-left:auto">
+                    Auto-scroll
+                    <button class="toggle on" id="log-autoscroll" onclick="this.classList.toggle('on')"></button>
+                </label>
+            </div>
+            <div class="log-container" id="log-container"></div>
+        </div>
+    </main>
+
+    <!-- SEARCH ITEM MODAL -->
+    <div class="modal-overlay" id="search-item-modal">
+        <div class="modal">
+            <h2 id="search-item-modal-title">New Search Item</h2>
+            <input type="hidden" id="si-edit-id">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="si-name" placeholder="e.g. RTX 4060">
+            </div>
+            <div class="form-group">
+                <label>Platforms</label>
+                <div style="display:flex;gap:12px">
+                    <label style="font-size:13px"><input type="checkbox" id="si-plat-tutti" checked> Tutti</label>
+                    <label style="font-size:13px"><input type="checkbox" id="si-plat-ricardo"> Ricardo</label>
+                    <label style="font-size:13px"><input type="checkbox" id="si-plat-anibis"> Anibis</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Specific Search Prompt</label>
+                <textarea id="si-specific-prompt" placeholder="Guidance for generating specific search terms..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>General Search Prompt</label>
+                <textarea id="si-general-prompt" placeholder="Guidance for generating general search terms..."></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Specific Terms Count</label>
+                    <input type="number" id="si-specific-count" value="50">
+                </div>
+                <div class="form-group">
+                    <label>General Terms Count</label>
+                    <input type="number" id="si-general-count" value="50">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Min Price (CHF)</label>
+                    <input type="number" id="si-min-price" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Max Price (CHF)</label>
+                    <input type="number" id="si-max-price" placeholder="1000">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Min Profit (CHF)</label>
+                    <input type="number" id="si-min-profit" placeholder="50">
+                </div>
+                <div class="form-group">
+                    <label>Min Value Factor</label>
+                    <input type="number" id="si-min-factor" step="0.1" placeholder="1.5">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Evaluation Hint</label>
+                <textarea id="si-eval-hint" placeholder="Extra context for the AI when evaluating listings, e.g. 'This is a desktop GPU, typical new price is 300 CHF. Only items with original packaging are worth full value.'"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Knowledge Base</label>
+                <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px">
+                    Long-form reference material (market prices, model lineups, condition guides, brand tiers...).
+                    Prepended to every eval call as a stable prefix, so providers with prefix caching (DeepSeek auto, Anthropic cache_control) bill it at the cheap cache-hit rate after the first call. Paste markdown directly.
+                </div>
+                <textarea id="si-knowledge-base" rows="10" style="font-family:ui-monospace,monospace;font-size:12px" placeholder="# Sewing Machines 101&#10;&#10;## Brand tiers&#10;- Premium: Bernina, Pfaff, Husqvarna Viking...&#10;- Mid: Janome, Brother, Singer Heavy Duty...&#10;&#10;## Typical used prices (CHF)&#10;- Bernina 1008: 400-700&#10;..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Custom Filters (one per line)</label>
+                <textarea id="si-filters" placeholder="Is this item a standalone GPU? Return true if yes.&#10;Is this a laptop? Return false if it is."></textarea>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px">
+                <button class="btn" onclick="closeModal('search-item-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSearchItem()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROMPT EDIT MODAL -->
+    <div class="modal-overlay" id="prompt-modal">
+        <div class="modal" style="max-width:700px">
+            <h2 id="prompt-modal-title">Edit Prompt</h2>
+            <input type="hidden" id="pr-edit-id">
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="pr-description">
+            </div>
+            <div class="form-group">
+                <label>System Prompt</label>
+                <textarea id="pr-system" style="min-height:100px"></textarea>
+            </div>
+            <div class="form-group">
+                <label>User Prompt Template (Jinja2)</label>
+                <textarea id="pr-template" style="min-height:160px;font-family:Consolas,Monaco,monospace;font-size:12px"></textarea>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px">
+                <button class="btn" onclick="closeModal('prompt-modal')">Cancel</button>
+                <button class="btn" onclick="testPrompt()">Test</button>
+                <button class="btn btn-primary" onclick="savePrompt()">Save</button>
+            </div>
+            <div id="prompt-test-result" style="margin-top:16px;display:none" class="card">
+                <h3 style="font-size:14px;margin-bottom:8px">Test Result</h3>
+                <pre style="font-size:12px;white-space:pre-wrap;color:var(--text-dim)" id="prompt-test-output"></pre>
+            </div>
+        </div>
+    </div>
+
+<script>
+const API = '';
+let currentPage = 1;
+let logEventSource = null;
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+
+        const panel = tab.dataset.panel;
+        if (panel === 'listings') loadListings();
+        else if (panel === 'search-config') loadSearchItems();
+        else if (panel === 'prompts') loadPrompts();
+        else if (panel === 'schedule') { loadSchedulerStatus(); loadScrapeRuns(); loadShopSettings(); }
+        else if (panel === 'products') loadProducts();
+        else if (panel === 'logs') startLogStream();
+    });
+});
+
+// ─── LISTINGS ──────────────────────────────────────────
+async function loadListings(page = 1) {
+    currentPage = page;
+    const params = new URLSearchParams();
+    const platform = document.getElementById('filter-platform').value;
+    const passed = document.getElementById('filter-passed').value;
+    const minP = document.getElementById('filter-min-price').value;
+    const maxP = document.getElementById('filter-max-price').value;
+    const sort = document.getElementById('filter-sort').value;
+    const order = document.getElementById('filter-order').value;
+
+    if (platform) params.set('platform', platform);
+    if (passed) params.set('passed', passed);
+    if (minP) params.set('min_price', minP);
+    if (maxP) params.set('max_price', maxP);
+    params.set('sort', sort);
+    params.set('order', order);
+    params.set('page', page);
+    params.set('per_page', 30);
+
+    const res = await fetch(API + '/api/listings?' + params);
+    const data = await res.json();
+
+    const container = document.getElementById('listings-container');
+    if (!data.listings || data.listings.length === 0) {
+        container.innerHTML = '<div class="empty-state"><h3>No listings found</h3><p>Adjust filters or run a scrape.</p></div>';
+        document.getElementById('listings-pagination').innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = data.listings.map(l => {
+        const factorBadge = l.value_factor
+            ? (l.value_factor >= 2 ? 'badge-green' : l.value_factor >= 1.5 ? 'badge-yellow' : 'badge-dim')
+            : 'badge-dim';
+        const passedBadge = l.passed_filters === true ? 'badge-green' : l.passed_filters === false ? 'badge-red' : 'badge-dim';
+        const passedText = l.passed_filters === true ? 'Passed' : l.passed_filters === false ? 'Filtered' : 'Pending';
+        const confidence = l.confidence != null ? Math.round(l.confidence * 100) + '%' : '-';
+        const distance = l.distance_km != null ? l.distance_km + ' km' : '-';
+        const profit = l.estimated_value != null ? l.estimated_value - l.price : null;
+        const thumb = l.image_url
+            ? '<div class="listing-thumb"><img src="' + l.image_url + '" alt=""></div>'
+            : '';
+
+        // Age: prefer true listing publish time; fall back to when we first scraped it.
+        const nowIso = new Date().toISOString();
+        const ageSrc = l.listed_at || l.scraped_at;
+        const ageHours = ageSrc ? hoursBetween(ageSrc, nowIso) : null;
+        const ageLabel = l.listed_at ? 'Age' : 'Seen';
+
+        // Auction end: only Ricardo auctions have this.
+        let auctionItem = '';
+        if (l.auction_end_at) {
+            const hoursToEnd = hoursBetween(nowIso, l.auction_end_at);
+            if (hoursToEnd != null) {
+                if (hoursToEnd < 0) {
+                    auctionItem = '<div class="meta-item"><div class="meta-label">Auction</div><div class="meta-value dim">ended</div></div>';
+                } else {
+                    const endBadge = hoursToEnd < 6 ? 'badge-red' : hoursToEnd < 24 ? 'badge-yellow' : 'badge-dim';
+                    auctionItem = '<div class="meta-item"><div class="meta-label">Ends in</div><div class="meta-value"><span class="badge ' + endBadge + '">' + formatDuration(hoursToEnd) + '</span></div></div>';
+                }
+            }
+        }
+
+        // Build meta items in a consistent order
+        const items = [];
+        items.push('<div class="meta-item"><div class="meta-label">Price</div><div class="meta-value">' + l.price + ' CHF</div></div>');
+        if (l.estimated_value != null) {
+            items.push('<div class="meta-item"><div class="meta-label">Value</div><div class="meta-value">' + l.estimated_value + ' CHF</div></div>');
+        }
+        if (profit != null) {
+            const profitClass = profit > 0 ? '' : 'dim';
+            items.push('<div class="meta-item"><div class="meta-label">Profit</div><div class="meta-value ' + profitClass + '">' + profit + ' CHF</div></div>');
+        }
+        if (l.value_factor != null) {
+            items.push('<div class="meta-item"><div class="meta-label">Factor</div><div class="meta-value"><span class="badge ' + factorBadge + '">' + l.value_factor.toFixed(2) + 'x</span></div></div>');
+        }
+        items.push('<div class="meta-item"><div class="meta-label">Confidence</div><div class="meta-value">' + confidence + '</div></div>');
+        items.push('<div class="meta-item"><div class="meta-label">Distance</div><div class="meta-value">' + distance + '</div></div>');
+        if (ageHours != null) {
+            items.push('<div class="meta-item"><div class="meta-label">' + ageLabel + '</div><div class="meta-value">' + formatDuration(ageHours) + '</div></div>');
+        }
+        if (auctionItem) items.push(auctionItem);
+        if (l.location) {
+            items.push('<div class="meta-item"><div class="meta-label">Location</div><div class="meta-value dim" title="' + esc(l.location) + '">' + esc(l.location) + '</div></div>');
+        }
+
+        return `<div class="card listing-card" onclick="this.classList.toggle('expanded')">
+            ${thumb}
+            <div class="listing-body">
+                <div class="card-header">
+                    <div style="flex:1;min-width:0">
+                        <div class="card-title"><a href="${l.url}" target="_blank" onclick="event.stopPropagation()">${esc(l.title)}</a></div>
+                    </div>
+                    <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+                        ${l.passed_filters === true ? '<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();unpassListing(' + l.id + ')">Unpass</button>' : ''}
+                        <span class="badge ${passedBadge}">${passedText}</span>
+                        <span class="badge badge-blue">${l.platform}</span>
+                    </div>
+                </div>
+                <div class="meta-grid">
+                    ${items.join('')}
+                </div>
+                <div class="card-detail">
+                    ${l.description ? '<p style="margin-bottom:8px">' + esc(l.description).substring(0, 500) + '</p>' : ''}
+                    ${l.eval_reasoning ? '<p><strong>AI Reasoning:</strong> ' + esc(l.eval_reasoning) + '</p>' : ''}
+                    ${l.components ? '<p style="margin-top:6px"><strong>Components:</strong> ' + JSON.stringify(l.components) + '</p>' : ''}
+                    ${l.component_values ? '<p><strong>Component Values:</strong> ' + JSON.stringify(l.component_values) + '</p>' : ''}
+                    ${l.filter_results ? '<p><strong>Filters:</strong> ' + JSON.stringify(l.filter_results) + '</p>' : ''}
+                    <p style="margin-top:6px;font-size:12px;color:var(--text-dim)">
+                        Scraped: ${l.scraped_at || '-'} | Seller: ${esc(l.seller_name || '-')} | PLZ: ${l.postcode || '-'}
+                        ${l.notified ? ' | Notified: ' + (l.notified_at || 'yes') : ''}
+                    </p>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    const totalPages = Math.ceil(data.total / data.per_page);
+    document.getElementById('listings-pagination').innerHTML = `
+        <button class="btn btn-sm" ${page <= 1 ? 'disabled' : ''} onclick="loadListings(${page-1})">Prev</button>
+        <span>Page ${page} of ${totalPages} (${data.total} total)</span>
+        <button class="btn btn-sm" ${page >= totalPages ? 'disabled' : ''} onclick="loadListings(${page+1})">Next</button>
+    `;
+}
+
+async function unpassListing(id) {
+    try {
+        await fetch(API + '/api/listings/' + id + '/unpass', { method: 'POST' });
+        loadListings(currentPage);
+        loadStats();
+    } catch(e) {
+        alert('Failed to unpass: ' + e);
+    }
+}
+
+// ─── SEARCH ITEMS ──────────────────────────────────────
+async function loadSearchItems() {
+    const res = await fetch(API + '/api/search-items');
+    const items = await res.json();
+    const container = document.getElementById('search-items-container');
+
+    if (!items.length) {
+        container.innerHTML = '<div class="empty-state"><h3>No search items</h3><p>Create one to start finding deals.</p></div>';
+        return;
+    }
+
+    container.innerHTML = items.map(item => {
+        const toggleCls = item.enabled ? 'on' : '';
+        const priceRow = item.min_price != null
+            ? '<div class="meta-row">Price: <strong>' + item.min_price + '-' + (item.max_price || '...') + ' CHF</strong></div>' : '';
+        const factorRow = item.min_value_factor != null
+            ? '<div class="meta-row">Min Factor: <strong>' + item.min_value_factor + 'x</strong></div>' : '';
+        const filterRow = item.custom_filters
+            ? '<div class="meta-row">Filters: <strong>' + item.custom_filters.length + '</strong></div>' : '';
+        return '<div class="card">'
+            + '<div class="card-header">'
+            + '<div class="card-title">' + esc(item.name) + '</div>'
+            + '<div style="display:flex;gap:6px;align-items:center">'
+            + '<button class="toggle ' + toggleCls + '" onclick="toggleSearchItem(' + item.id + ', ' + !item.enabled + ')"></button>'
+            + '<button class="btn btn-sm" onclick="editSearchItem(' + item.id + ')">Edit</button>'
+            + '<button class="btn btn-sm" onclick="regenTerms(' + item.id + ')">Regen Terms</button>'
+            + '<button class="btn btn-sm btn-danger" onclick="deleteSearchItem(' + item.id + ')">Delete</button>'
+            + '</div></div>'
+            + '<div class="meta">'
+            + '<div class="meta-row">Platforms: <strong>' + (item.platforms||[]).join(', ') + '</strong></div>'
+            + '<div class="meta-row">Terms: <strong>' + (item.cached_search_terms||[]).length + '</strong> cached</div>'
+            + priceRow + factorRow + filterRow
+            + '</div></div>';
+    }).join('');
+}
+
+function showSearchItemModal(id = null) {
+    document.getElementById('si-edit-id').value = id || '';
+    document.getElementById('search-item-modal-title').textContent = id ? 'Edit Search Item' : 'New Search Item';
+    if (!id) {
+        document.getElementById('si-name').value = '';
+        document.getElementById('si-plat-tutti').checked = true;
+        document.getElementById('si-plat-ricardo').checked = false;
+        document.getElementById('si-plat-anibis').checked = false;
+        document.getElementById('si-specific-prompt').value = '';
+        document.getElementById('si-general-prompt').value = '';
+        document.getElementById('si-specific-count').value = '50';
+        document.getElementById('si-general-count').value = '50';
+        document.getElementById('si-min-price').value = '';
+        document.getElementById('si-max-price').value = '';
+        document.getElementById('si-min-profit').value = '';
+        document.getElementById('si-min-factor').value = '';
+        document.getElementById('si-eval-hint').value = '';
+        document.getElementById('si-knowledge-base').value = '';
+        document.getElementById('si-filters').value = '';
+    }
+    document.getElementById('search-item-modal').classList.add('active');
+}
+
+async function editSearchItem(id) {
+    const res = await fetch(API + '/api/search-items');
+    const items = await res.json();
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+
+    showSearchItemModal(id);
+    document.getElementById('si-name').value = item.name;
+    document.getElementById('si-plat-tutti').checked = (item.platforms||[]).includes('tutti');
+    document.getElementById('si-plat-ricardo').checked = (item.platforms||[]).includes('ricardo');
+    document.getElementById('si-plat-anibis').checked = (item.platforms||[]).includes('anibis');
+    document.getElementById('si-specific-prompt').value = item.search_terms_specific_prompt || '';
+    document.getElementById('si-general-prompt').value = item.search_terms_general_prompt || '';
+    document.getElementById('si-specific-count').value = item.search_terms_specific_count || 50;
+    document.getElementById('si-general-count').value = item.search_terms_general_count || 50;
+    document.getElementById('si-min-price').value = item.min_price ?? '';
+    document.getElementById('si-max-price').value = item.max_price ?? '';
+    document.getElementById('si-min-profit').value = item.min_profit ?? '';
+    document.getElementById('si-min-factor').value = item.min_value_factor ?? '';
+    document.getElementById('si-eval-hint').value = item.eval_hint || '';
+    document.getElementById('si-knowledge-base').value = item.knowledge_base || '';
+    document.getElementById('si-filters').value = (item.custom_filters||[]).join('\n');
+}
+
+async function saveSearchItem() {
+    const id = document.getElementById('si-edit-id').value;
+    const platforms = [];
+    if (document.getElementById('si-plat-tutti').checked) platforms.push('tutti');
+    if (document.getElementById('si-plat-ricardo').checked) platforms.push('ricardo');
+    if (document.getElementById('si-plat-anibis').checked) platforms.push('anibis');
+
+    const filtersRaw = document.getElementById('si-filters').value.trim();
+    const filters = filtersRaw ? filtersRaw.split('\n').filter(f => f.trim()) : null;
+
+    const body = {
+        name: document.getElementById('si-name').value,
+        platforms,
+        search_terms_specific_prompt: document.getElementById('si-specific-prompt').value || null,
+        search_terms_general_prompt: document.getElementById('si-general-prompt').value || null,
+        search_terms_specific_count: parseInt(document.getElementById('si-specific-count').value) || 50,
+        search_terms_general_count: parseInt(document.getElementById('si-general-count').value) || 50,
+        min_price: parseInt(document.getElementById('si-min-price').value) || null,
+        max_price: parseInt(document.getElementById('si-max-price').value) || null,
+        min_profit: parseInt(document.getElementById('si-min-profit').value) || null,
+        min_value_factor: parseFloat(document.getElementById('si-min-factor').value) || null,
+        eval_hint: document.getElementById('si-eval-hint').value || null,
+        knowledge_base: document.getElementById('si-knowledge-base').value || null,
+        custom_filters: filters,
+    };
+
+    const url = id ? API + '/api/search-items/' + id : API + '/api/search-items';
+    const method = id ? 'PUT' : 'POST';
+    await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    closeModal('search-item-modal');
+    loadSearchItems();
+}
+
+async function toggleSearchItem(id, enabled) {
+    await fetch(API + '/api/search-items/' + id, {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ enabled })
+    });
+    loadSearchItems();
+}
+
+async function deleteSearchItem(id) {
+    if (!confirm('Delete this search item?')) return;
+    await fetch(API + '/api/search-items/' + id, { method: 'DELETE' });
+    loadSearchItems();
+}
+
+async function regenTerms(id) {
+    const btn = event.target;
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+    const res = await fetch(API + '/api/search-items/' + id + '/regenerate-terms', { method: 'POST' });
+    const data = await res.json();
+    btn.textContent = 'Regen Terms';
+    btn.disabled = false;
+    alert('Generated ' + (data.count || 0) + ' terms');
+    loadSearchItems();
+}
+
+// ─── PROMPTS ──────────────────────────────────────
+async function loadPrompts() {
+    const res = await fetch(API + '/api/prompts');
+    const prompts = await res.json();
+    const container = document.getElementById('prompts-container');
+
+    container.innerHTML = prompts.map(p => `
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title">${esc(p.name)}</div>
+                    <div style="font-size:13px;color:var(--text-dim);margin-top:2px">${esc(p.description||'')}</div>
+                </div>
+                <div style="display:flex;gap:6px">
+                    <button class="btn btn-sm" onclick="editPrompt(${p.id})">Edit</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function editPrompt(id) {
+    const res = await fetch(API + '/api/prompts/' + id);
+    const p = await res.json();
+    document.getElementById('pr-edit-id').value = p.id;
+    document.getElementById('prompt-modal-title').textContent = 'Edit: ' + p.name;
+    document.getElementById('pr-description').value = p.description || '';
+    document.getElementById('pr-system').value = p.system_prompt || '';
+    document.getElementById('pr-template').value = p.user_prompt_template || '';
+    document.getElementById('prompt-test-result').style.display = 'none';
+    document.getElementById('prompt-modal').classList.add('active');
+}
+
+async function savePrompt() {
+    const id = document.getElementById('pr-edit-id').value;
+    const body = {
+        description: document.getElementById('pr-description').value,
+        system_prompt: document.getElementById('pr-system').value,
+        user_prompt_template: document.getElementById('pr-template').value,
+    };
+    await fetch(API + '/api/prompts/' + id, {
+        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    closeModal('prompt-modal');
+    loadPrompts();
+}
+
+async function testPrompt() {
+    const id = document.getElementById('pr-edit-id').value;
+    const resultDiv = document.getElementById('prompt-test-result');
+    const output = document.getElementById('prompt-test-output');
+    resultDiv.style.display = 'block';
+    output.textContent = 'Running test...';
+
+    const res = await fetch(API + '/api/prompts/' + id + '/test', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+            sample_data: {
+                title: "NVIDIA RTX 4060 8GB Gaming GPU",
+                description: "Barely used RTX 4060, works perfectly. Original packaging included.",
+                price: 200,
+                filters: ["Is this a standalone GPU?"],
+                product_context: "",
+                name: "RTX 4060",
+                specific_prompt: "", general_prompt: "",
+                specific_count: 5, general_count: 5,
+            }
+        })
+    });
+    const data = await res.json();
+    output.textContent = JSON.stringify(data, null, 2);
+}
+
+// ─── SCHEDULE ──────────────────────────────────────
+async function loadSchedulerStatus() {
+    const res = await fetch(API + '/api/scheduler/status');
+    const data = await res.json();
+    const el = document.getElementById('scheduler-status');
+    const jobsHtml = data.jobs.map(j => {
+        const next = j.next_run ? new Date(j.next_run).toLocaleString() : 'not scheduled';
+        return '<p style="margin-top:4px">' + j.id + ': next run <strong>' + next + '</strong></p>';
+    }).join('');
+    el.innerHTML = '<p>Running: <strong>' + (data.running ? 'Yes' : 'No') + '</strong></p>' + jobsHtml;
+}
+
+async function loadScrapeRuns() {
+    const res = await fetch(API + '/api/scrape-runs');
+    const data = await res.json();
+    const container = document.getElementById('scrape-runs-container');
+
+    if (!data.runs.length) {
+        container.innerHTML = '<div class="empty-state"><h3>No scrape runs yet</h3></div>';
+        return;
+    }
+
+    const rows = data.runs.map(r => {
+        const time = r.started_at ? new Date(r.started_at).toLocaleString() : '-';
+        const badgeCls = r.status === 'completed' ? 'badge-green' : r.status === 'failed' ? 'badge-red' : 'badge-yellow';
+        return '<tr><td>' + time + '</td>'
+            + '<td><span class="badge ' + badgeCls + '">' + r.status + '</span></td>'
+            + '<td>' + r.listings_found + '</td><td>' + r.listings_new + '</td><td>' + r.listings_evaluated + '</td>'
+            + '<td>' + r.listings_passed + '</td><td>' + r.notifications_sent + '</td>'
+            + '<td style="color:var(--red);font-size:12px">' + esc(r.error_message||'') + '</td></tr>';
+    }).join('');
+    container.innerHTML = '<table>'
+        + '<thead><tr><th>Time</th><th>Status</th><th>Found</th><th>New</th><th>Evaluated</th><th>Passed</th><th>Notified</th><th>Error</th></tr></thead>'
+        + '<tbody>' + rows + '</tbody></table>';
+}
+
+async function triggerScrape() {
+    await fetch(API + '/api/scheduler/trigger', { method: 'POST' });
+    setTimeout(() => { loadSchedulerStatus(); loadScrapeRuns(); }, 1000);
+}
+
+async function evalAll() {
+    const btn = document.getElementById('eval-all-btn');
+    btn.textContent = 'Starting...';
+    btn.disabled = true;
+    try {
+        const res = await fetch(API + '/api/eval-all', { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'nothing_to_do') {
+            alert('No unevaluated listings found.');
+        } else {
+            alert(`Evaluation started for ${data.count} listings. Check logs for progress.`);
+        }
+    } catch(e) {
+        alert('Failed to start evaluation: ' + e);
+    }
+    btn.textContent = 'Eval All Unevaluated';
+    btn.disabled = false;
+}
+
+async function deleteAllListings() {
+    if (!confirm('Delete ALL listings? This cannot be undone.')) return;
+    try {
+        const res = await fetch(API + '/api/listings', { method: 'DELETE' });
+        const data = await res.json();
+        alert(`Deleted ${data.count} listings.`);
+        loadListings();
+    } catch(e) {
+        alert('Failed: ' + e);
+    }
+}
+
+async function updateInterval() {
+    const min = parseInt(document.getElementById('interval-input').value);
+    if (!min || min < 1) return alert('Enter a valid interval');
+    await fetch(API + '/api/scheduler/interval', {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ minutes: min })
+    });
+    loadSchedulerStatus();
+}
+
+// ─── SHOPS ──────────────────────────────────────
+async function loadShopSettings() {
+    const res = await fetch(API + '/api/shops');
+    const data = await res.json();
+    const container = document.getElementById('shop-toggles');
+
+    const labels = { tutti: 'Tutti.ch', ricardo: 'Ricardo.ch', anibis: 'Anibis.ch' };
+    container.innerHTML = Object.entries(labels).map(([key, label]) => `
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+            <button class="toggle ${data[key] ? 'on' : ''}" onclick="toggleShop('${key}', ${!data[key]})"></button>
+            ${label}
+        </label>
+    `).join('');
+}
+
+async function toggleShop(platform, enabled) {
+    const res = await fetch(API + '/api/shops');
+    const current = await res.json();
+    current[platform] = enabled;
+    await fetch(API + '/api/shops', {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(current)
+    });
+    loadShopSettings();
+}
+
+// ─── PRODUCTS ──────────────────────────────────────
+async function loadProducts() {
+    const res = await fetch(API + '/api/products');
+    const data = await res.json();
+    const container = document.getElementById('products-container');
+
+    if (!data.products.length) {
+        container.innerHTML = '<div class="empty-state"><h3>No products yet</h3><p>Products are discovered as listings are evaluated.</p></div>';
+        return;
+    }
+
+    const prodRows = data.products.map(p => {
+        const trend = p.value_trend != null
+            ? (p.value_trend > 0.1 ? '<span style="color:var(--green)">up</span>'
+            : p.value_trend < -0.1 ? '<span style="color:var(--red)">down</span>'
+            : '<span style="color:var(--text-dim)">stable</span>')
+            : '-';
+        const updated = p.last_updated ? new Date(p.last_updated).toLocaleDateString() : '-';
+        return '<tr><td><strong>' + esc(p.name) + '</strong></td><td>' + esc(p.category||'-') + '</td>'
+            + '<td>' + p.estimated_value + ' CHF</td><td>' + trend + '</td><td>' + p.sample_count + '</td>'
+            + '<td>' + updated + '</td></tr>';
+    }).join('');
+    container.innerHTML = '<table>'
+        + '<thead><tr><th>Name</th><th>Category</th><th>Est. Value</th><th>Trend</th><th>Samples</th><th>Last Updated</th></tr></thead>'
+        + '<tbody>' + prodRows + '</tbody></table>';
+}
+
+// ─── LOGS ──────────────────────────────────────
+async function loadLogs() {
+    const level = document.getElementById('log-level-filter').value;
+    const search = document.getElementById('log-search').value;
+    const params = new URLSearchParams();
+    if (level) params.set('level', level);
+    if (search) params.set('search', search);
+    params.set('per_page', 200);
+
+    const res = await fetch(API + '/api/logs?' + params);
+    const data = await res.json();
+    const container = document.getElementById('log-container');
+
+    container.innerHTML = data.entries.reverse().map(e =>
+        `<div class="log-line ${e.level}">${e.timestamp} | ${e.level.padEnd(7)} | ${esc(e.logger)} | ${esc(e.message)}</div>`
+    ).join('');
+
+    if (document.getElementById('log-autoscroll').classList.contains('on')) {
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+function startLogStream() {
+    loadLogs();
+    if (logEventSource) logEventSource.close();
+
+    logEventSource = new EventSource(API + '/api/logs/stream');
+    logEventSource.onmessage = (event) => {
+        const entry = JSON.parse(event.data);
+        const levelFilter = document.getElementById('log-level-filter').value;
+        if (levelFilter && entry.level !== levelFilter) return;
+
+        const container = document.getElementById('log-container');
+        const line = document.createElement('div');
+        line.className = 'log-line ' + entry.level;
+        line.textContent = `${entry.timestamp} | ${entry.level.padEnd(7)} | ${entry.logger} | ${entry.message}`;
+        container.appendChild(line);
+
+        if (document.getElementById('log-autoscroll').classList.contains('on')) {
+            container.scrollTop = container.scrollHeight;
+        }
+    };
+    logEventSource.onerror = () => {
+        // Auto-reconnect after 3s if stream drops
+        logEventSource.close();
+        setTimeout(startLogStream, 3000);
+    };
+}
+
+// ─── STATS BAR ──────────────────────────────────────
+async function loadStats() {
+    try {
+        const res = await fetch(API + '/api/listings/stats');
+        const s = await res.json();
+        document.getElementById('stats-bar').innerHTML = `
+            Total: <span>${s.total}</span> |
+            Evaluated: <span>${s.evaluated}</span> |
+            Passed: <span>${s.passed}</span> |
+            Notified: <span>${s.notified}</span>
+        `;
+    } catch(e) {}
+}
+
+// ─── UTILS ──────────────────────────────────────
+function esc(s) {
+    if (!s) return '';
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+// Backend emits naive UTC datetimes via .isoformat(); append Z so the
+// browser parses them as UTC rather than local time.
+function parseUtc(s) {
+    if (!s) return null;
+    const hasTz = /[Zz]$|[+-]\d{2}:?\d{2}$/.test(s);
+    const d = new Date(hasTz ? s : s + 'Z');
+    return isNaN(d.getTime()) ? null : d;
+}
+
+function hoursBetween(fromIso, toIso) {
+    const f = parseUtc(fromIso);
+    const t = parseUtc(toIso);
+    if (!f || !t) return null;
+    return (t.getTime() - f.getTime()) / 3600000;
+}
+
+function formatDuration(h) {
+    if (h == null) return '-';
+    const abs = Math.abs(h);
+    if (abs < 1) return Math.max(0, Math.round(abs * 60)) + 'm';
+    if (abs < 48) return Math.round(abs) + 'h';
+    return Math.round(abs / 24) + 'd';
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+// Init
+loadListings();
+loadStats();
+setInterval(loadStats, 30000);
+</script>
+</body>
+</html>
